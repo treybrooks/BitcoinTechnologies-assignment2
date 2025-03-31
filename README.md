@@ -1,91 +1,73 @@
-# Try Out Development Containers: Java
+# Programming Assignment: Consensus from Trust
 
-[![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/microsoft/vscode-remote-try-java)
+For this assignment, you will design and implement a distributed consensus algorithm given a graph of “trust” relationships between nodes. This is an alternative method of resisting sybil attacks and achieving consensus; it has the benefit of not “wasting” electricity like proof-of-work does.
 
-A **development container** is a running container with a well-defined tool/runtime stack and its prerequisites. You can try out development containers with **[GitHub Codespaces](https://github.com/features/codespaces)** or **[Visual Studio Code Dev Containers](https://aka.ms/vscode-remote/containers)**.
+Nodes in the network are either compliant or malicious. You will write a CompliantNode class (which implements a provided Node interface) that defines the behavior of each of the compliant nodes. The network is a directed random graph, where each edge represents a trust relationship. For example, if there is an  A → B edge, it means that Node B listens to transactions broadcast by node A. We say that B is A’s follower and A is B’s followee.
 
-This is a sample project that lets you try out either option in a few easy steps. We have a variety of other [vscode-remote-try-*](https://github.com/search?q=org%3Amicrosoft+vscode-remote-try-&type=Repositories) sample projects, too.
+The provided Node class has the following API: 
+```java {.line-numbers}
+public interface Node {
 
-> **Note:** If you already have a Codespace or dev container, you can jump to the [Things to try](#things-to-try) section.
+// NOTE: Node is an interface and does not have a constructor.
+// However, your CompliantNode.java class requires a 4 argument
+// constructor as defined in the provided CompliantNode.java.
+// This constructor gives your node information about the 
+// simulation including the number of rounds it will run for.
 
-## Setting up the development container
+/** {@code followees[i]} is true if this node follows node
+  *{@code i} 
+  */
+  void setFollowees(boolean[] followees);
 
-### GitHub Codespaces
-Follow these steps to open this sample in a Codespace:
-1. Click the **Code** drop-down menu.
-2. Click on the **Codespaces** tab.
-3. Click **Create codespace on main**.
+  /** initialize proposal list of transactions */
+  void setPendingTransaction(Set<Transaction> pendingTransactions);
 
-For more info, check out the [GitHub documentation](https://docs.github.com/en/free-pro-team@latest/github/developing-online-with-codespaces/creating-a-codespace#creating-a-codespace).
+  /**
+  * @return proposals to send to my followers. REMEMBER: After 
+  * final round, behavior of {@code getProposals} changes and 
+  * it should return the transactions upon which consensus has 
+  * been reached.
+  */
+  Set<Transaction> sendToFollowers();
 
-### VS Code Dev Containers
+  /** receive candidates from other nodes. */
+  void receiveFromFollowees(Set<Candidate> candidates);
+}
+```
 
-If you already have VS Code and Docker installed, you can click the badge above or [here](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/microsoft/vscode-remote-try-java) to get started. Clicking these links will cause VS Code to automatically install the Dev Containers extension if needed, clone the source code into a container volume, and spin up a dev container for use.
+Each node should succeed in achieving consensus with a network in which its peers are other nodes running the same code. Your algorithm should be designed such that a network of nodes receiving different sets of transactions can agree on a set to be accepted. We will be providing a Simulation class that generates a random trust graph. There will be a set number of rounds where during each round, your nodes will broadcast their proposal to their followers and at the end of the round, should have reached a consensus on what transactions should be agreed upon. 
 
-Follow these steps to open this sample in a container using the VS Code Dev Containers extension:
+ Each node will be given its list of followees via a boolean array whose indices correspond to nodes in the graph. A ‘true’ at index i indicates that node i is a followee, ‘false’ otherwise. That node will also be given a list of transactions (its proposal list) that it can broadcast to its followers. Generating the initial transactions/proposal list will not be your responsibility. Assume that all transactions are valid and that invalid transactions cannot be created. 
 
-1. If this is your first time using a development container, please ensure your system meets the pre-reqs (i.e. have Docker installed) in the [getting started steps](https://aka.ms/vscode-remote/containers/getting-started).
+In testing, the nodes running your code may encounter a number (up to 45%) of malicious nodes that do not cooperate with your consensus algorithm. Nodes of your design should be able to withstand as many malicious nodes as possible and still achieve consensus. Malicious nodes may have arbitrary behavior. For instance, among other things, a malicious node might:
 
-2. To use this repository, you can either open the repository in an isolated Docker volume:
++ be functionally dead and never actually broadcast any transactions.
++ constantly broadcasts its own set of transactions and never accept transactions given to it.
++ change behavior between rounds to avoid detection.
 
-    - Press <kbd>F1</kbd> and select the **Dev Containers: Try a Sample...** command.
-    - Choose the "Java" sample, wait for the container to start, and try things out!
-        > **Note:** Under the hood, this will use the **Dev Containers: Clone Repository in Container Volume...** command to clone the source code in a Docker volume instead of the local filesystem. [Volumes](https://docs.docker.com/storage/volumes/) are the preferred mechanism for persisting container data.
+You will be provided the following files:
 
-   Or open a locally cloned copy of the code:
+| Node.java | a basic interface for your CompliantNode class|
+|CompliantNode.java|A class skeleton for your CompliantNode class. You should develop your code based off of the template this file provides.|
+|Candidate.java|a simple class to describe candidate transactions your node recieves|
+|MaliciousNode.java|a very simple example of a malicious node|
+|Simulation.java|a basic graph generator that you may use to run your own simulations with varying graph parameters (described below) and test your CompliantNode class|
+|Transaction.java|the Transaction class, a transaction being merely a wrapper around a unique identifier (i.e., the validity and semantics of transactions are irrelevant to this assignment)|
 
-   - Clone this repository to your local filesystem.
-   - Press <kbd>F1</kbd> and select the **Dev Containers: Open Folder in Container...** command.
-   - Select the cloned copy of this folder, wait for the container to start, and try things out!
+The graph of nodes will have the following parameters:
++ the pairwise connectivity probability of the random graph: e.g. {.1, .2, .3}
++ the probability that a node will be set to be malicious: e.g {.15, .30, .45}
++ the probability that each of the initial valid transactions will be communicated: e.g. {.01, .05, .10}
++ the number of rounds in the simulation e.g. {10, 20}
 
-## Things to try
+Your focus will be on developing a robust CompliantNode class that will work in all combinations of the graph parameters. At the end of each round, your node will see the list of transactions that were broadcast to it. 
 
-Once you have this sample opened, you'll be able to work with it like you would locally.
+Each test is measured based on
++ How large a set of nodes have reached consensus. A set of nodes only counts as having reached consensus if they all output the same list of transactions.
++ The size of the set that consensus is reached on. You should strive to make the consensus set of transactions as large as possible.
++ Execution time, which should be within reason (if your code takes too long, the grading script will time out and you will be able to resubmit your code).
 
-Some things to try:
-
-1. **Edit:**
-   - Open `src/main/java/com/mycompany/app/App.java`.
-   - Try adding some code and check out the language features.
-   - Make a spelling mistake and notice it is detected. The [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) extension was automatically installed because it is referenced in `.devcontainer/devcontainer.json`.
-   - Also notice that the [Extension Pack for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack) is installed. The JDK is in the `mcr.microsoft.com/devcontainers/java` image and Dev Container settings and metadata are automatically picked up from [image labels](https://containers.dev/implementors/reference/#labels).
-
-2. **Terminal:** Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>\`</kbd> and type `uname` and other Linux commands from the terminal window.
-
-3. **Build, Run, and Debug:**
-   - Open `src/main/java/com/mycompany/app/App.java`.
-   - Add a breakpoint.
-   - Press <kbd>F5</kbd> to launch the app in the container.
-   - Once the breakpoint is hit, try hovering over variables, examining locals, and more.
-
-4. **Run a Test:**
-   - Open `src/test/java/com/mycompany/app/AppTest.java`.
-   - Put a breakpoint in a test.
-   - Click the `Debug Test` in the Code Lens above the function and watch it hit the breakpoint.
-
-5. **Install Node.js using a Dev Container Feature:**
-   - Press <kbd>F1</kbd> and select the **Dev Containers: Configure Container Features...** or **Codespaces: Configure Container Features...** command.
-   - Type "node" in the text box at the top.
-   - Check the check box next to "Node.js (via nvm) and yarn" (published by devcontainers) 
-   - Click OK
-   - Press <kbd>F1</kbd> and select the **Dev Containers: Rebuild Container** or **Codespaces: Rebuild Container** command so the modifications are picked up.
-
-  
-## Contributing
-
-This project welcomes contributions and suggestions. Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.microsoft.com.
-
-When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
-## License
-
-Copyright © Microsoft Corporation All rights reserved.<br />
-Licensed under the MIT License. See LICENSE in the project root for license information.
+Some Hints:
++ Your node will not know the network topology and should do its best to work in the general case. That said, be aware of how different topology might impact how you want to include transactions in your picture of consensus.
++ Your CompliantNode code can assume that all Transactions it sees are valid -- the simulation code will only send you valid transactions (both initially and between rounds) and only the simulation code has the ability to create valid transactions.
++ Ignore pathological cases that occur with extremely low probability, for example where a compliant node happens to pair with only malicious nodes. We will make sure that the actual tests cases do not have such scenarios.
