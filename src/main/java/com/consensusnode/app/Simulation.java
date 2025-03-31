@@ -3,6 +3,7 @@
 // believes consensus has been reached upon. You can use this simulation to
 // test your nodes. You will want to try creating some deviant nodes and
 // mixing them in the network to fully test.
+package com.consensusnode.app;
 
 import java.util.HashSet;
 import java.util.Random;
@@ -30,7 +31,7 @@ public class Simulation {
          if(Math.random() < p_malicious)
             // When you are ready to try testing with malicious nodes, replace the
             // instantiation below with an instantiation of a MaliciousNode
-            nodes[i] = new MalDoNothing(p_graph, p_malicious, p_txDistribution, numRounds);
+            nodes[i] = new MaliciousNode(p_graph, p_malicious, p_txDistribution, numRounds);
          else
             nodes[i] = new CompliantNode(p_graph, p_malicious, p_txDistribution, numRounds);
       }

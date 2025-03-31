@@ -1,3 +1,5 @@
+package com.consensusnode.app;
+
 final public class Transaction {
     final int id;
 

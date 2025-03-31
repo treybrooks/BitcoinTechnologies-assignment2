@@ -1,0 +1,7 @@
+com/consensusnode/app/MaliciousNode.class
+com/consensusnode/app/Candidate.class
+com/consensusnode/app/Simulation.class
+com/consensusnode/app/Node.class
+com/consensusnode/app/CompliantNode.class
+com/consensusnode/app/App.class
+com/consensusnode/app/Transaction.class

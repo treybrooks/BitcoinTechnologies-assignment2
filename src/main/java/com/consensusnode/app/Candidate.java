@@ -1,3 +1,5 @@
+package com.consensusnode.app;
+
 public class Candidate {
 	Transaction tx;
 	int sender;

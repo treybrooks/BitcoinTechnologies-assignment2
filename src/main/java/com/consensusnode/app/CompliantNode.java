@@ -1,3 +1,5 @@
+package com.consensusnode.app;
+
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -18,6 +20,7 @@ public class CompliantNode implements Node {
 
     public Set<Transaction> sendToFollowers() {
         // IMPLEMENT THIS
+        return null;
     }
 
     public void receiveFromFollowees(Set<Candidate> candidates) {
